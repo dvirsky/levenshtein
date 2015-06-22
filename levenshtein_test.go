@@ -7,6 +7,8 @@ import (
 
 func TestSparseAutomaton(t *testing.T) {
 
+	// The test doesn't test much, it just prints the results
+
 	words := []string{"banana", "bananas", "cabana"}
 	//, "foobarbazfoobarbaz", "a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ""
 
@@ -17,15 +19,25 @@ func TestSparseAutomaton(t *testing.T) {
 
 			for _, query := range words {
 
-				state := a.Start()
+				fmt.Printf("Testing %s <==> %s, max distance %d\n\n", query, word, n)
 
+				state := a.Start()
 				for i, b := range query {
 
 					state = a.Step(state, byte(b))
-					fmt.Println(word, n, "=>", query[:i+1], a.IsMatch(state), a.CanMatch(state))
-					//assert dense.is_match(s_dense) == sparse.is_match(s_sparse)
-					//assert dense.can_match(s_dense) == sparse.can_match(s_sparse)
+					canMatch, isMatch := a.CanMatch(state), a.IsMatch(state)
+
+					fmt.Printf("Query: %s, Match? %v, CanMatch? %v\n", query[:i+1], isMatch, canMatch)
+
+					if isMatch && !canMatch {
+						t.Errorf("IsMatch is true, canMatch must be true too")
+					}
+					if !canMatch {
+						break
+					}
+
 				}
+				fmt.Println("----\n")
 			}
 		}
 	}

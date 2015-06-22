@@ -1,34 +1,13 @@
 package levenshtein
 
+// SparseAutomaton is a naive Go implementation of a levenshtein automaton using sparse vectors, as described
+// and implemented here: http://julesjacobs.github.io/2015/06/17/disqus-levenshtein-simple-and-fast.html
 type SparseAutomaton struct {
 	str string
 	max int
 }
 
-type sparseVector struct {
-	values  []int
-	indices []int
-}
-
-func newSparseVector(values ...int) *sparseVector {
-	v := new(sparseVector)
-	v.values = values
-	v.indices = make([]int, len(values))
-	for i := 0; i < len(v.values); i++ {
-		v.indices[i] = i
-	}
-
-	return v
-}
-
-func (v *sparseVector) set(index, value int) {
-	v.values, v.indices = append(v.values, value), append(v.indices, index)
-}
-
-func (v *sparseVector) len() int {
-	return len(v.indices)
-}
-
+// NewSparseAutomaton creates a new automaton for the string s, with a given max edit distance check
 func NewSparseAutomaton(s string, maxEdits int) *SparseAutomaton {
 	return &SparseAutomaton{
 		str: s,
@@ -37,17 +16,19 @@ func NewSparseAutomaton(s string, maxEdits int) *SparseAutomaton {
 
 }
 
-func (a *SparseAutomaton) Start() *sparseVector {
+// Start initializes the automaton's state vector and returns it for further iteration
+func (a *SparseAutomaton) Start() sparseVector {
 
-	vals := make([]int, len(a.str)+1)
+	vals := make([]int, a.max+1)
 	for i := 0; i < a.max+1; i++ {
 		vals[i] = i
 	}
 
-	return newSparseVector(vals...)
+	return newSparseVector(vals)
 
 }
 
+// just a utility min function for ints, CUZ GO AINT GOT NO GENERICS
 func min(x, y int) int {
 	if x < y {
 		return x
@@ -55,56 +36,63 @@ func min(x, y int) int {
 	return y
 }
 
-func (a *SparseAutomaton) Step(state *sparseVector, c byte) *sparseVector {
+// Step returns the next state of the automaton given a pervios state and a character to check
+func (a *SparseAutomaton) Step(state sparseVector, c byte) sparseVector {
 
-	var newVec *sparseVector
-	if state.len() > 0 && state.indices[0] == 0 && state.values[0] < a.max {
-		newVec = newSparseVector(state.values[0] + 1)
+	var newVec sparseVector
+
+	if len(state) > 0 && state[0].idx == 0 && state[0].val < a.max {
+		newVec = newSparseVector([]int{state[0].val + 1})
 	} else {
-		newVec = newSparseVector()
+		newVec = sparseVector{}
 	}
 
-	for j, i := range state.indices {
+	for j, entry := range state {
 
-		if i == len(a.str) {
+		if entry.idx == len(a.str) {
 			break
 		}
 
 		cost := 1
-		if a.str[i] == c {
+		if a.str[entry.idx] == c {
 			cost = 0
 		}
 
-		val := state.values[j] + cost
-		if newVec.len() > 0 && newVec.indices[len(newVec.indices)-1] == i {
-			val = min(val, newVec.values[len(newVec.values)-1]+1)
+		val := entry.val + cost
+		if len(newVec) > 0 && newVec[len(newVec)-1].idx == entry.idx {
+			val = min(val, newVec[len(newVec)-1].val+1)
 		}
 
-		if j+1 < len(newVec.indices) && newVec.indices[j+1] == i+1 {
-			val = min(val, newVec.values[j+1]+1)
+		if j+1 < len(newVec) && newVec[j+1].idx == entry.idx+1 {
+			val = min(val, newVec[j+1].val+1)
 		}
 		if val <= a.max {
-			newVec.set(i+1, val)
+			newVec = newVec.append(entry.idx+1, val)
 		}
 
 	}
 	return newVec
 }
 
-func (a *SparseAutomaton) IsMatch(v *sparseVector) bool {
-	return v.len() > 0 && v.indices[len(v.indices)-1] == len(a.str)
+// IsMatch returns true if the current state vector represents a string that is within the max
+// edit distance from the initial automaton string
+func (a *SparseAutomaton) IsMatch(v sparseVector) bool {
+	return len(v) > 0 && v[len(v)-1].idx == len(a.str)
 }
 
-func (a *SparseAutomaton) CanMatch(v *sparseVector) bool {
-	return v.len() > 0
+// CanMatch returns true if there is a possibility that feeding the automaton with more steps will
+// yield a match. Once CanMatch is false there is no point in continuing iteration
+func (a *SparseAutomaton) CanMatch(v sparseVector) bool {
+	return len(v) > 0
 }
 
-func (a *SparseAutomaton) Transitions(indices, values []int) []byte {
+func (a *SparseAutomaton) Transitions(v sparseVector) []byte {
 
 	set := map[byte]struct{}{}
-	for _, i := range indices {
-		if i < len(a.str) {
-			set[a.str[i]] = struct{}{}
+	for _, entry := range v {
+
+		if entry.idx < len(a.str) {
+			set[a.str[entry.idx]] = struct{}{}
 		}
 	}
 
@@ -115,39 +103,3 @@ func (a *SparseAutomaton) Transitions(indices, values []int) []byte {
 
 	return ret
 }
-
-//        return set(self.string[i] for i in indices if i < len(self.string))
-
-//    def can_match(self, (indices, values)):
-//        return bool(indices)
-
-//    def step(self, (indices, values), c):
-//        if indices and indices[0] == 0 and values[0] < self.max_edits:
-//            new_indices = [0]
-//            new_values = [values[0] + 1]
-//        else:
-//            new_indices = []
-//            new_values = []
-
-//        for j,i in enumerate(indices):
-//            if i == len(self.string): break
-//            cost = 0 if self.string[i] == c else 1
-//            val = values[j] + cost
-//            if new_indices and new_indices[-1] == i:
-//                val = min(val, new_values[-1] + 1)
-//            if j+1 < len(indices) and indices[j+1] == i+1:
-//                val = min(val, values[j+1] + 1)
-//            if val <= self.max_edits:
-//                new_indices.append(i+1)
-//                new_values.append(val)
-
-//        return (new_indices, new_values)
-
-//    def is_match(self, (indices, values)):
-//        return bool(indices) and indices[-1] == len(self.string)
-
-//    def can_match(self, (indices, values)):
-//        return bool(indices)
-
-//    def transitions(self, (indices, values)):
-//        return set(self.string[i] for i in indices if i < len(self.string))
