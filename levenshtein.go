@@ -53,19 +53,21 @@ func (a *SparseAutomaton) Step(state sparseVector, c byte) sparseVector {
 			break
 		}
 
-		cost := 1
-		if a.str[entry.idx] == c {
-			cost = 0
+		cost := 0
+		if a.str[entry.idx] != c {
+			cost = 1
 		}
 
-		val := entry.val + cost
+		val := state[j].val + cost
+
 		if len(newVec) > 0 && newVec[len(newVec)-1].idx == entry.idx {
 			val = min(val, newVec[len(newVec)-1].val+1)
 		}
 
-		if j+1 < len(newVec) && newVec[j+1].idx == entry.idx+1 {
-			val = min(val, newVec[j+1].val+1)
+		if j+1 < len(state) && state[j+1].idx == entry.idx+1 {
+			val = min(val, state[j+1].val+1)
 		}
+
 		if val <= a.max {
 			newVec = newVec.append(entry.idx+1, val)
 		}
