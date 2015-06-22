@@ -62,3 +62,42 @@ character to check
 ```go
 func (a *SparseAutomaton) Transitions(v sparseVector) []byte
 ```
+
+#### type Trie
+
+```go
+type Trie struct {
+}
+```
+
+Trie holds a trie representation of a dictionary of words, for fuzzy matching
+against it
+
+#### func  NewTrie
+
+```go
+func NewTrie() *Trie
+```
+NewTrie creates a new empty trie
+
+#### func (*Trie) Exists
+
+```go
+func (t *Trie) Exists(s string) bool
+```
+Exists returns true if a string exists as it is in the trie
+
+#### func (*Trie) FuzzyMatches
+
+```go
+func (t *Trie) FuzzyMatches(s string, maxDist int) []string
+```
+FuzzyMatches returns all the words in the trie that are with maxDist edit
+distance from s
+
+#### func (*Trie) Insert
+
+```go
+func (t *Trie) Insert(s string)
+```
+Insert adds a string to the trie
