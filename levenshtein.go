@@ -5,6 +5,7 @@ package levenshtein
 type SparseAutomaton struct {
 	str string
 	max int
+	sl  int
 }
 
 // NewSparseAutomaton creates a new automaton for the string s, with a given max edit distance check
@@ -39,14 +40,11 @@ func min(x, y int) int {
 // Step returns the next state of the automaton given a pervios state and a character to check
 func (a *SparseAutomaton) Step(state sparseVector, c byte) sparseVector {
 
-	var newVec sparseVector
+	newVec := make(sparseVector, 0)
 
 	if len(state) > 0 && state[0].idx == 0 && state[0].val < a.max {
-		newVec = newSparseVector([]int{state[0].val + 1})
-	} else {
-		newVec = sparseVector{}
+		newVec = newVec.append(0, state[0].val+1)
 	}
-
 	for j, entry := range state {
 
 		if entry.idx == len(a.str) {
@@ -60,11 +58,11 @@ func (a *SparseAutomaton) Step(state sparseVector, c byte) sparseVector {
 
 		val := state[j].val + cost
 
-		if len(newVec) > 0 && newVec[len(newVec)-1].idx == entry.idx {
+		if len(newVec) != 0 && newVec[len(newVec)-1].idx == entry.idx {
 			val = min(val, newVec[len(newVec)-1].val+1)
 		}
 
-		if j+1 < len(state) && state[j+1].idx == entry.idx+1 {
+		if len(state) > j+1 && state[j+1].idx == entry.idx+1 {
 			val = min(val, state[j+1].val+1)
 		}
 
@@ -79,7 +77,7 @@ func (a *SparseAutomaton) Step(state sparseVector, c byte) sparseVector {
 // IsMatch returns true if the current state vector represents a string that is within the max
 // edit distance from the initial automaton string
 func (a *SparseAutomaton) IsMatch(v sparseVector) bool {
-	return len(v) > 0 && v[len(v)-1].idx == len(a.str)
+	return len(v) != 0 && v[len(v)-1].idx == len(a.str)
 }
 
 // CanMatch returns true if there is a possibility that feeding the automaton with more steps will

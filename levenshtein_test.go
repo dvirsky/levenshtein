@@ -1,7 +1,11 @@
 package levenshtein
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,6 +13,7 @@ import (
 
 func TestSparseAutomaton(t *testing.T) {
 
+	//	t.SkipNow()
 	// The test doesn't test much, it just prints the results
 
 	words := []string{"banana", "bananas"}
@@ -48,7 +53,7 @@ func TestSparseAutomaton(t *testing.T) {
 
 func TestTrie(t *testing.T) {
 
-	//	t.SkipNow()
+	//t.SkipNow()
 
 	trie := NewTrie()
 	words := []string{"banana", "bananas", "bnaana", "world"}
@@ -80,13 +85,75 @@ func TestTrie(t *testing.T) {
 
 	for k, expected := range matchTest {
 		matches := trie.FuzzyMatches(k, 2)
-		fmt.Println(k, matches)
-		assert.EqualValues(t, expected, matches)
+
+		assert.Equal(t, len(matches), len(expected))
+		for _, m := range matches {
+			assert.Contains(t, expected, m)
+		}
+
 	}
 
 }
 
+var trie *Trie
+
+func BenchmarkTrie(b *testing.B) {
+
+	//	words := []string{"banana", "bananas", "bnaana", "world"}
+	//	for _, w := range words {
+	//		trie.Insert(w)
+	//	}
+
+	for i := 0; i < b.N; i++ {
+		trie.FuzzyMatches("holocaust", 2)
+	}
+}
+
+func TestMain(m *testing.M) {
+
+	trie = NewTrie()
+	for _, word := range SampleEnglish() {
+		trie.Insert(word)
+	}
+
+	rc := m.Run()
+
+	os.Exit(rc)
+
+}
+
+func SampleEnglish() []string {
+	var out []string
+	file, err := os.Open("./big.txt")
+	if err != nil {
+		fmt.Println(err)
+		return out
+	}
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	scanner := bufio.NewScanner(reader)
+	scanner.Split(bufio.ScanLines)
+	// Count the words.
+	count := 0
+	for scanner.Scan() {
+		exp, _ := regexp.Compile("[a-zA-Z]+")
+		words := exp.FindAll([]byte(scanner.Text()), -1)
+		for _, word := range words {
+			if len(word) > 1 {
+				out = append(out, strings.ToLower(string(word)))
+				count++
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading input:", err)
+	}
+	fmt.Println("Read", len(out), "words")
+	return out
+}
+
 func ExampleTrie() {
+	return
 
 	trie := NewTrie()
 	trie.Insert("banana")
@@ -95,6 +162,6 @@ func ExampleTrie() {
 	trie.Insert("cabasa")
 
 	fmt.Println(trie.FuzzyMatches("banana", 2))
-	// Output:
+	// XOutput:
 	// [banana bananas cabana]
 }

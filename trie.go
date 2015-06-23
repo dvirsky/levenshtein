@@ -40,6 +40,9 @@ func (n *node) addChild(c byte) *node {
 func (n *node) add(key string) {
 
 	current := n
+	if n.b == key[0] {
+		key = key[1:]
+	}
 
 	//find or create the node to put this record on
 	for pos := 0; pos < len(key); pos++ {
@@ -60,29 +63,45 @@ func (n *node) add(key string) {
 
 }
 
-func (n *node) traverse(a *SparseAutomaton, vec sparseVector, str string) []string {
+type stackNode struct {
+	vec  sparseVector
+	str  string
+	node *node
+}
 
-	var ret []string
-	newVec := a.Step(vec, n.b)
+func (n *node) traverse(a *SparseAutomaton, vec sparseVector) []string {
 
-	// if this is a terminal node - just check if we have a match and add it to the results
-	if n.terminal && a.IsMatch(newVec) {
-		ret = []string{str + string(n.b)}
-	}
+	ret := []string{}
 
-	if n.children != nil && len(n.children) > 0 && a.CanMatch(newVec) {
-		str = str + string(n.b)
+	stack := make([]*stackNode, 1, 20)
+	stack[0] = &stackNode{vec, "", n}
 
-		for _, child := range n.children {
-			matches := child.traverse(a, newVec, str)
-			if matches != nil {
-				if ret == nil {
-					ret = matches
-				} else {
-					ret = append(ret, matches...)
-				}
+	var top *stackNode
+	newVec := vec
+	for len(stack) > 0 {
+
+		top, stack = stack[len(stack)-1], stack[:len(stack)-1]
+		n = top.node
+		if n.b != 0 {
+			newVec = a.Step(top.vec, n.b)
+		}
+		// if this is a terminal node - just check if we have a match and add it to the results
+		if n.terminal && len(newVec) > 0 && a.IsMatch(newVec) {
+			ret = append(ret, top.str+string(n.b))
+		}
+
+		if n.children != nil && a.CanMatch(newVec) {
+
+			if n.b != 0 {
+				top.str += string(n.b)
+			}
+
+			for _, child := range n.children {
+
+				stack = append(stack, &stackNode{newVec, top.str, child})
 			}
 		}
+
 	}
 
 	return ret
@@ -129,16 +148,16 @@ func (t *Trie) FuzzyMatches(s string, maxDist int) []string {
 
 	a := NewSparseAutomaton(s, maxDist)
 
-	ret := make([]string, 0, 10)
 	state := a.Start()
+	return t.root.traverse(a, state)
 
-	for _, child := range t.root.children {
+	//	for _, child := range t.root.children {
 
-		matches := child.traverse(a, state, "")
-		if len(matches) > 0 {
-			ret = append(ret, matches...)
-		}
+	//		matches := child.traverse(a, state)
+	//		if len(matches) > 0 {
+	//			ret = append(ret, matches...)
+	//		}
 
-	}
-	return ret
+	//	}
+	//	return ret
 }
