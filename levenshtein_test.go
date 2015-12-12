@@ -135,8 +135,9 @@ func SampleEnglish() []string {
 	scanner.Split(bufio.ScanLines)
 	// Count the words.
 	count := 0
+	exp, _ := regexp.Compile("[a-zA-Z]+")
+
 	for scanner.Scan() {
-		exp, _ := regexp.Compile("[a-zA-Z]+")
 		words := exp.FindAll([]byte(scanner.Text()), -1)
 		for _, word := range words {
 			if len(word) > 1 {
