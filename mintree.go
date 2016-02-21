@@ -1,11 +1,15 @@
 package levenshtein
 
 import (
+	"io"
+	"io/ioutil"
+
 	"github.com/smartystreets/mafsa"
 )
 
 type MinTree struct {
-	Root MinTreeNode
+	mafsa.MinTree
+	root *MinTreeNode
 }
 
 type MinTreeNode struct {
@@ -19,10 +23,49 @@ type mtstackNode struct {
 	node *MinTreeNode
 }
 
-func (n *MinTreeNode) traverse(a *SparseAutomaton, vec sparseVector) []string {
+// Creates a new MinTree from a sorted list of strings. The list must be
+// sorted because that is what the mafsa package expects.
+func NewMinTree(words []string) (*MinTree, error) {
+	bt := mafsa.New()
+	for _, w := range words {
+		bt.Insert(w)
+	}
+
+	bt.Finish()
+	me := mafsa.Encoder{}
+	bytes, err := me.Encode(bt)
+	if err != nil {
+		return nil, err
+	}
+
+	de := mafsa.Decoder{}
+	mmt, err := de.Decode(bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MinTree{*mmt, &MinTreeNode{*mmt.Root, rune(0)}}, nil
+}
+
+// LoadMinTree loads a MinTree from an io.Reader.
+func LoadMinTree(r io.Reader) (*MinTree, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	mt, err := new(mafsa.Decoder).Decode(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MinTree{*mt, &MinTreeNode{*mt.Root, rune(0)}}, nil
+}
+
+func (n *MinTreeNode) traverse(a *SparseAutomatonRune, vec sparseVector) []string {
 	ret := []string{}
 
-	stack := make([]*mtstackNode, 0, len(n.Edges))
+	stack := make([]*mtstackNode, len(n.Edges))
 	var i int
 
 	for r, mt := range n.Edges {
@@ -61,11 +104,11 @@ func (n *MinTreeNode) traverse(a *SparseAutomaton, vec sparseVector) []string {
 	return ret
 }
 
-// FuzzyMatches returns all the words in the MT that are with maxDist
-// edit distance from s
+// FuzzyMatches returns all the words in the MinTree that are with
+// maxDist edit distance from s
 func (mt *MinTree) FuzzyMatches(s string, maxDist int) []string {
-	a := NewSparseAutomaton(s, maxDist)
+	a := NewSparseAutomatonRune(s, maxDist)
 
 	state := a.Start()
-	return mt.Root.traverse(a, state)
+	return mt.root.traverse(a, state)
 }
