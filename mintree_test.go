@@ -9,9 +9,8 @@ import (
 func TestMinTreeFuzzySearch(t *testing.T) {
 	var err error
 
-	words := SampleEnglish()
-	sort.Strings(words)
-	mt, err = NewMinTree(words)
+	sort.Strings(testwords)
+	mt, err = NewMinTree(testwords)
 	if err != nil {
 		t.Fatalf("Could not create MinTree: %q. Exiting.", err)
 	}
