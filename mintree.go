@@ -1,6 +1,7 @@
 package levenshtein
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
 
@@ -40,6 +41,37 @@ func NewMinTree(words []string) (*MinTree, error) {
 
 	de := mafsa.Decoder{}
 	mmt, err := de.Decode(bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MinTree{*mmt, &MinTreeNode{*mmt.Root, rune(0)}}, nil
+}
+
+// Creates a new MinTree from a sorted list of strings. The list must be
+// sorted because that is what the mafsa package expects.
+// After the MinTree has been successfully created, the function also
+// writes it to the io.Writer.
+func NewMinTreeWrite(words []string, wr io.Writer) (*MinTree, error) {
+	bt := mafsa.New()
+	for _, w := range words {
+		bt.Insert(w)
+	}
+
+	bt.Finish()
+	me := mafsa.Encoder{}
+	bs, err := me.Encode(bt)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = io.Copy(wr, bytes.NewReader(bs))
+	if err != nil {
+		return nil, err
+	}
+
+	de := mafsa.Decoder{}
+	mmt, err := de.Decode(bs)
 	if err != nil {
 		return nil, err
 	}
