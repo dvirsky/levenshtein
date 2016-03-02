@@ -5,7 +5,6 @@ package levenshtein
 type SparseAutomaton struct {
 	str string
 	max int
-	sl  int
 }
 
 // NewSparseAutomaton creates a new automaton for the string s, with a given max edit distance check

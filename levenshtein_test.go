@@ -95,7 +95,10 @@ func TestTrie(t *testing.T) {
 
 }
 
-var trie *Trie
+var (
+	trie      *Trie
+	testwords []string
+)
 
 func BenchmarkTrie(b *testing.B) {
 
@@ -112,7 +115,8 @@ func BenchmarkTrie(b *testing.B) {
 func TestMain(m *testing.M) {
 
 	trie = NewTrie()
-	for _, word := range SampleEnglish() {
+	testwords = SampleEnglish()
+	for _, word := range testwords {
 		trie.Insert(word)
 	}
 
@@ -123,11 +127,10 @@ func TestMain(m *testing.M) {
 }
 
 func SampleEnglish() []string {
-	var out []string
 	file, err := os.Open("./big.txt")
 	if err != nil {
 		fmt.Println(err)
-		return out
+		return testwords
 	}
 	defer file.Close()
 	reader := bufio.NewReader(file)
@@ -141,7 +144,7 @@ func SampleEnglish() []string {
 		words := exp.FindAll([]byte(scanner.Text()), -1)
 		for _, word := range words {
 			if len(word) > 1 {
-				out = append(out, strings.ToLower(string(word)))
+				testwords = append(testwords, strings.ToLower(string(word)))
 				count++
 			}
 		}
@@ -149,8 +152,8 @@ func SampleEnglish() []string {
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading input:", err)
 	}
-	fmt.Println("Read", len(out), "words")
-	return out
+	fmt.Println("Read", len(testwords), "words")
+	return testwords
 }
 
 func ExampleTrie() {
