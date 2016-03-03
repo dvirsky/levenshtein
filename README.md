@@ -101,3 +101,48 @@ distance from s
 func (t *Trie) Insert(s string)
 ```
 Insert adds a string to the trie
+
+#### type MinTree
+
+```go
+type MinTree struct {
+	mafsa.MinTree
+	root *MinTreeNode
+}
+```
+
+#### func NewMinTree([]string) (*MinTree, error)
+
+```go
+func NewMinTree([]string) (*MinTree, error)
+```
+Creates a new MinTree from a sorted list of strings. The list must be
+sorted because that is what the mafsa package expects.
+
+
+#### func NewMinTreeWrite([]string, io.Writer) (*MinTree, error)
+
+```go
+func NewMinTreeWrite(words []string, wr io.Writer) (*MinTree, error) {
+```
+Creates a new MinTree from a sorted list of strings. The list must be
+sorted because that is what the mafsa package expects.
+After the MinTree has been successfully created, the function also
+writes it to the io.Writer.
+
+
+#### func LoadMinTree(io.Reader) (*MinTree, error)
+
+```go
+func LoadMinTree(r io.Reader) (*MinTree, error)
+```
+LoadMinTree loads a MinTree from an io.Reader.
+
+
+#### func (mt *MinTree) FuzzyMatches(string, int) []string
+
+```go
+func (mt *MinTree) FuzzyMatches(s string, maxDist int) []string
+```
+FuzzyMatches returns all the words in the MinTree that are with
+maxDist edit distance from s

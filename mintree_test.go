@@ -8,15 +8,25 @@ import (
 
 func TestMinTreeFuzzySearch(t *testing.T) {
 	var err error
+	uniq := make(map[string]struct{}, len(testwords)/2)
 
-	sort.Strings(testwords)
-	mt, err = NewMinTree(testwords)
+	for _, w := range testwords {
+		uniq[w] = struct{}{}
+	}
+	uniqwords := make([]string, 0, len(uniq))
+	for k, _ := range uniq {
+		uniqwords = append(uniqwords, k)
+	}
+	fmt.Printf("Number of unique words in the MinTree: %d\n", len(uniqwords))
+
+	sort.Strings(uniqwords)
+	mt, err = NewMinTree(uniqwords)
 	if err != nil {
 		t.Fatalf("Could not create MinTree: %q. Exiting.", err)
 	}
 
 	matches := mt.FuzzyMatches("danger", 2)
-	fmt.Printf("Fuzzymatch count: %d.\n", len(matches))
+	fmt.Printf("Fuzzymatch count for \"danger\" with distance two: %d\n", len(matches))
 	for _, match := range matches {
 		fmt.Println(match)
 	}

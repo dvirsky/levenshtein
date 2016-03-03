@@ -36,7 +36,7 @@ func min(x, y int) int {
 	return y
 }
 
-// Step returns the next state of the automaton given a pervios state and a character to check
+// Step returns the next state of the automaton given a previous state and a character to check
 func (a *SparseAutomaton) Step(state sparseVector, c byte) sparseVector {
 
 	newVec := make(sparseVector, 0)
