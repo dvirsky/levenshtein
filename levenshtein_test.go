@@ -12,12 +12,7 @@ import (
 )
 
 func TestSparseAutomaton(t *testing.T) {
-
-	//	t.SkipNow()
-	// The test doesn't test much, it just prints the results
-
 	words := []string{"banana", "bananas"}
-	//, "foobarbazfoobarbaz", "a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ""
 
 	for n := 2; n < 3; n++ {
 
@@ -52,9 +47,6 @@ func TestSparseAutomaton(t *testing.T) {
 }
 
 func TestTrie(t *testing.T) {
-
-	//t.SkipNow()
-
 	trie := NewTrie()
 	words := []string{"banana", "bananas", "bnaana", "world"}
 	nonwords := []string{"sdfsdfsd", "hellos", "jeolls", "ello", "wrlds"}
@@ -101,11 +93,6 @@ var (
 )
 
 func BenchmarkTrie(b *testing.B) {
-
-	//	words := []string{"banana", "bananas", "bnaana", "world"}
-	//	for _, w := range words {
-	//		trie.Insert(w)
-	//	}
 
 	for i := 0; i < b.N; i++ {
 		trie.FuzzyMatches("holocaust", 2)
