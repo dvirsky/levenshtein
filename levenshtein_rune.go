@@ -33,7 +33,7 @@ func (a *SparseAutomatonRune) Transitions(v sparseVector) []rune {
 	return ret
 }
 
-// StepRune returns the next state of the automaton given a pervios
+// StepRune returns the next state of the automaton given a previous
 // state and a rune to check
 func (a *SparseAutomatonRune) Step(state sparseVector, r rune) sparseVector {
 	newVec := make(sparseVector, 0)
