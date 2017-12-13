@@ -144,7 +144,6 @@ func SampleEnglish() []string {
 }
 
 func ExampleTrie() {
-	return
 
 	trie := NewTrie()
 	trie.Insert("banana")

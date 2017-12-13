@@ -2,6 +2,7 @@ package levenshtein
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -29,7 +30,10 @@ type mtstackNode struct {
 func NewMinTree(words []string) (*MinTree, error) {
 	bt := mafsa.New()
 	for _, w := range words {
-		bt.Insert(w)
+		err := bt.Insert(w)
+		if err != nil {
+			return nil, fmt.Errorf("Could not insert value into MinTree: %q\n", err)
+		}
 	}
 
 	bt.Finish()
