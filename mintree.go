@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/rubenv/mafsa"
+	"github.com/Shugyousha/mafsa"
 )
 
 type MinTree struct {
