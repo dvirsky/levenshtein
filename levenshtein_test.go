@@ -39,7 +39,8 @@ func TestSparseAutomaton(t *testing.T) {
 					}
 
 				}
-				fmt.Println("----\n")
+				fmt.Println("----")
+				fmt.Println()
 			}
 		}
 	}
